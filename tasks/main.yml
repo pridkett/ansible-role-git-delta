@@ -1,0 +1,42 @@
+---
+# tasks file for git-delta
+- name: Check if git-delta is installed
+  command: dpkg-query -W git_delta
+  register: git_delta_check_deb
+  failed_when: git_delta_check_deb.rc > 1
+  changed_when: git_delta_check_deb.rc == 1
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Download git-delta binary
+  get_url: 
+    url="https://github.com/dandavison/delta/releases/download/{{ git_delta_version }}/git-delta_{{git_delta_version}}_{{ git_delta_architecture }}.deb"
+    dest="/tmp/{{ ansible_env.USER }}_git-delta.deb"
+  when:
+    - ansible_facts['os_family'] == "Debian"
+    - git_delta_check_deb.rc == 1
+
+- name: Install git-delta binary
+  apt: deb="/tmp/{{ ansible_env.USER }}_git-delta.deb"
+  become: yes
+  when:
+    - ansible_facts['os_family'] == "Debian"
+    - git_delta_check_deb.rc == 1
+
+- name: Install git-delta (homebrew)
+  homebrew:
+    name: git-delta
+    state: present
+  when: ansible_facts['os_family'] == "Darwin"
+
+
+- name: Set global git interactive.diffFilter
+  git_config:
+    name: interactive.diffFilter
+    scope: global
+    value: delta --color-only
+
+- name: set global git core.pager
+  git_config:
+    name: core.pager
+    scope: global
+    value: delta --plus-color="#012800" --minus-color="#340001" --theme='Monokai Extended'
