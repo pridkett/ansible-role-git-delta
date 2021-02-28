@@ -5,6 +5,13 @@
     - ../vars/architecture/default.yml
   include_vars: '{{ item }}'
 
+- name: load sha256 sums
+  with_first_found:
+    - '../vars/versions/git-delta_{{ git_delta_version }}_{{ deb_architecture }}.deb.yml'
+    - '../vars/versions/default.yml'
+  include_vars: '{{ item }}'
+  when: ansible_os_family|lower == 'debian'
+
 # tasks file for git-delta
 - name: Check if git-delta is installed
   command: dpkg-query -W git_delta
@@ -15,8 +22,9 @@
 
 - name: Download git-delta binary
   get_url: 
-    url="https://github.com/dandavison/delta/releases/download/{{ git_delta_version }}/git-delta_{{ git_delta_version }}_{{ deb_architecture }}.deb"
-    dest="/tmp/{{ ansible_env.USER }}_git-delta.deb"
+    url: "https://github.com/dandavison/delta/releases/download/{{ git_delta_version }}/git-delta_{{ git_delta_version }}_{{ deb_architecture }}.deb"
+    dest: "/tmp/{{ ansible_env.USER }}_git-delta.deb"
+    checksum: 'sha256:{{ git_delta_redis_sha256sum }}'
   when:
     - ansible_os_family|lower == 'debian'
     - git_delta_check_deb.rc == 1
