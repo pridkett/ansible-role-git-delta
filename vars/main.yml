@@ -1,4 +1,3 @@
 ---
 # vars file for git-delta
-git_delta_architecture: "{% if ansible_architecture == 'armv7l' %}armhf{% else %}amd64{% endif %}"
-git_delta_version: "0.1.1"
+git_delta_version: "0.6.0"

@@ -1,4 +1,10 @@
 ---
+- name: load source vars
+  with_first_found:
+    - '../vars/architecture/{{ ansible_architecture | lower }}.yml'
+    - ../vars/architecture/default.yml
+  include_vars: '{{ item }}'
+
 # tasks file for git-delta
 - name: Check if git-delta is installed
   command: dpkg-query -W git_delta
@@ -9,7 +15,7 @@
 
 - name: Download git-delta binary
   get_url: 
-    url="https://github.com/dandavison/delta/releases/download/{{ git_delta_version }}/git-delta_{{git_delta_version}}_{{ git_delta_architecture }}.deb"
+    url="https://github.com/dandavison/delta/releases/download/{{ git_delta_version }}/git-delta_{{ git_delta_version }}_{{ deb_architecture }}.deb"
     dest="/tmp/{{ ansible_env.USER }}_git-delta.deb"
   when:
     - ansible_os_family|lower == 'debian'
