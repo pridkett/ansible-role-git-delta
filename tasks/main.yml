@@ -53,4 +53,4 @@
   git_config:
     name: core.pager
     scope: global
-    value: delta --plus-color="#012800" --minus-color="#340001" --theme='Monokai Extended'
+    value: delta
