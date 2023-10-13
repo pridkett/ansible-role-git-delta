@@ -1,3 +1,12 @@
 ---
 # vars file for git-delta
-git_delta_version: "0.6.0"
+git_delta_version: "0.16.5"
+arch_map:
+  aarch64: "arm64"
+  armv6l: "armhf"
+  armv7l: "armhf"
+sha256_map:
+  git-delta_0.16.5_amd64.deb: "5ff245b2c66510b746e68bfdda65f31a66c9c79d10d2a8241c19cbceb12d3caa"
+  git-delta_0.16.5_arm64.deb: "1ca6db2fdaae0954d0f9af1dffd486f9cd1f241c38d3e5a83d19b0d69488e979"
+  git-delta_0.16.5_armhf.deb: "f19c3b74039516a3ee0f7fe0d969a24f1b6be92dd7f867457635ad46c8a72614"
+

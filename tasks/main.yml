@@ -1,41 +1,49 @@
 ---
-- name: load source vars
-  with_first_found:
-    - '../vars/architecture/{{ ansible_architecture | lower }}.yml'
-    - ../vars/architecture/default.yml
-  include_vars: '{{ item }}'
+- name: Install git-delta on debian systems
+  block:
 
-- name: load sha256 sums
-  with_first_found:
-    - '../vars/versions/git-delta_{{ git_delta_version }}_{{ deb_architecture }}.deb.yml'
-    - '../vars/versions/default.yml'
-  include_vars: '{{ item }}'
+    - name: Get dpkg architecture
+      command: dpkg --print-architecture
+      register: dpkg_arch_result
+
+    - name: Set dpkg architecture to a variable
+      set_fact:
+        deb_architecture: "{{ dpkg_arch_result.stdout }}"
+        
+    - name: set git_delta_binary
+      set_fact:
+        git_delta_binary: "git-delta_{{ git_delta_version }}_{{ deb_architecture }}.deb"
+
+    - name: set git_delta_redis_sha256sum
+      set_fact:
+        git_delta_redis_sha256sum: "{{ sha256_map[git_delta_binary] }}"
+
+    - name: Debug message
+      debug:
+        msg: "sha256sum: {{ git_delta_redis_sha256sum }}"
+        
+    # tasks file for git-delta
+    - name: Check if git-delta is installed
+      command: dpkg-query -W git_delta
+      register: git_delta_check_deb
+      failed_when: git_delta_check_deb.rc > 1
+      changed_when: git_delta_check_deb.rc == 1
+    
+    - name: Download git-delta binary
+      get_url: 
+        url: "https://github.com/dandavison/delta/releases/download/{{ git_delta_version }}/git-delta_{{ git_delta_version }}_{{ deb_architecture }}.deb"
+        dest: "/tmp/{{ ansible_env.USER }}_git-delta.deb"
+        checksum: 'sha256:{{ git_delta_redis_sha256sum }}'
+      when:
+        - git_delta_check_deb.rc == 1
+    
+    - name: Install git-delta binary
+      apt: deb="/tmp/{{ ansible_env.USER }}_git-delta.deb"
+      become: yes
+      when:
+        - git_delta_check_deb.rc == 1
   when: ansible_os_family|lower == 'debian'
-
-# tasks file for git-delta
-- name: Check if git-delta is installed
-  command: dpkg-query -W git_delta
-  register: git_delta_check_deb
-  failed_when: git_delta_check_deb.rc > 1
-  changed_when: git_delta_check_deb.rc == 1
-  when: ansible_os_family|lower == 'debian'
-
-- name: Download git-delta binary
-  get_url: 
-    url: "https://github.com/dandavison/delta/releases/download/{{ git_delta_version }}/git-delta_{{ git_delta_version }}_{{ deb_architecture }}.deb"
-    dest: "/tmp/{{ ansible_env.USER }}_git-delta.deb"
-    checksum: 'sha256:{{ git_delta_redis_sha256sum }}'
-  when:
-    - ansible_os_family|lower == 'debian'
-    - git_delta_check_deb.rc == 1
-
-- name: Install git-delta binary
-  apt: deb="/tmp/{{ ansible_env.USER }}_git-delta.deb"
-  become: yes
-  when:
-    - ansible_os_family|lower == 'debian'
-    - git_delta_check_deb.rc == 1
-
+  
 - name: Install git-delta (homebrew)
   homebrew:
     name: git-delta
